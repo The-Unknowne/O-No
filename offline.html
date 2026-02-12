@@ -1,0 +1,1642 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>O,No Card Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+```
+    body {
+        font-family: 'Arial', sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+        overflow-x: hidden;
+    }
+
+    /* Screen Management */
+    .screen {
+        display: none;
+    }
+
+    .screen.active {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    /* Main Menu Styles */
+    .main-menu {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 30px;
+        padding: 60px 80px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+        text-align: center;
+        max-width: 500px;
+    }
+
+    .main-menu h1 {
+        font-size: 4em;
+        color: #667eea;
+        margin-bottom: 20px;
+        text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.2);
+    }
+
+    .main-menu p {
+        font-size: 1.2em;
+        color: #666;
+        margin-bottom: 40px;
+    }
+
+    .menu-button {
+        display: block;
+        width: 100%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 20px 40px;
+        font-size: 1.3em;
+        border-radius: 15px;
+        cursor: pointer;
+        margin-bottom: 15px;
+        transition: all 0.3s;
+        box-shadow: 0 6px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .menu-button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.6);
+    }
+
+    .menu-button.settings {
+        background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+        box-shadow: 0 6px 15px rgba(52, 152, 219, 0.4);
+    }
+
+    .menu-button.settings:hover {
+        box-shadow: 0 10px 25px rgba(52, 152, 219, 0.6);
+    }
+
+    .menu-button.quit {
+        background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        box-shadow: 0 6px 15px rgba(231, 76, 60, 0.4);
+    }
+
+    .menu-button.quit:hover {
+        box-shadow: 0 10px 25px rgba(231, 76, 60, 0.6);
+    }
+
+    /* Settings Menu Styles */
+    .settings-menu {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 30px;
+        padding: 50px 60px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+        max-width: 600px;
+    }
+
+    .settings-menu h2 {
+        font-size: 2.5em;
+        color: #667eea;
+        margin-bottom: 30px;
+        text-align: center;
+    }
+
+    .setting-item {
+        margin-bottom: 30px;
+        background: rgba(102, 126, 234, 0.1);
+        padding: 20px;
+        border-radius: 15px;
+    }
+
+    .setting-item label {
+        display: block;
+        font-size: 1.3em;
+        color: #333;
+        margin-bottom: 15px;
+        font-weight: bold;
+    }
+
+    .setting-item select {
+        width: 100%;
+        padding: 12px;
+        font-size: 1.1em;
+        border: 2px solid #667eea;
+        border-radius: 10px;
+        background: white;
+        cursor: pointer;
+    }
+
+    .toggle-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .toggle-switch {
+        position: relative;
+        display: inline-block;
+        width: 80px;
+        height: 40px;
+    }
+
+    .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .slider-toggle {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: 0.4s;
+        border-radius: 40px;
+    }
+
+    .slider-toggle:before {
+        position: absolute;
+        content: "";
+        height: 32px;
+        width: 32px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: 0.4s;
+        border-radius: 50%;
+    }
+
+    input:checked + .slider-toggle {
+        background-color: #667eea;
+    }
+
+    input:checked + .slider-toggle:before {
+        transform: translateX(40px);
+    }
+
+    .settings-buttons {
+        display: flex;
+        gap: 15px;
+        margin-top: 40px;
+    }
+
+    .settings-buttons button {
+        flex: 1;
+    }
+
+    /* Game Container Styles */
+    .game-container {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 30px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        max-width: 1200px;
+        width: 100%;
+    }
+
+    .game-header {
+        text-align: center;
+        color: white;
+        margin-bottom: 30px;
+    }
+
+    .game-header h1 {
+        font-size: 3em;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        margin-bottom: 10px;
+    }
+
+    .game-info {
+        display: flex;
+        justify-content: space-around;
+        flex-wrap: wrap;
+        color: white;
+        margin-bottom: 20px;
+        font-size: 1.2em;
+        gap: 10px;
+    }
+
+    .game-info div {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 10px 20px;
+        border-radius: 10px;
+    }
+
+    .play-area {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 40px;
+        margin: 40px 0;
+        min-height: 180px;
+        flex-wrap: wrap;
+    }
+
+    .card {
+        width: 120px;
+        height: 180px;
+        border-radius: 15px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        transition: transform 0.3s, box-shadow 0.3s;
+        position: relative;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        border: 4px solid white;
+    }
+
+    .card:hover {
+        transform: translateY(-10px) scale(1.05);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+    }
+
+    .card-inner {
+        width: 80%;
+        height: 80%;
+        background: white;
+        border-radius: 10px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 2.5em;
+        font-weight: bold;
+    }
+
+    .card.red { background-color: #e74c3c; }
+    .card.blue { background-color: #3498db; }
+    .card.green { background-color: #2ecc71; }
+    .card.yellow { background-color: #f1c40f; }
+    .card.wild { 
+        background: linear-gradient(135deg, #e74c3c 0%, #3498db 33%, #2ecc71 66%, #f1c40f 100%);
+    }
+    
+    .wild-color-indicator {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        border: 3px solid white;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .card-back {
+        background: linear-gradient(135deg, #2c3e50, #34495e);
+        cursor: pointer;
+    }
+
+    .card-back:hover {
+        transform: scale(1.05);
+    }
+
+    .player-hand {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 10px;
+        min-height: 200px;
+        margin-top: 30px;
+    }
+
+    .player-hand .card {
+        width: 100px;
+        height: 150px;
+    }
+
+    .player-hand .card-inner {
+        font-size: 2em;
+    }
+
+    .card.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .card.disabled:hover {
+        transform: none;
+    }
+
+    .color-picker {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        padding: 30px;
+        border-radius: 20px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+    }
+
+    .color-picker.active {
+        display: block;
+    }
+
+    .color-picker h3 {
+        margin-bottom: 20px;
+        text-align: center;
+    }
+
+    .color-options {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+    }
+
+    .color-option {
+        width: 80px;
+        height: 80px;
+        border-radius: 10px;
+        cursor: pointer;
+        border: 4px solid #fff;
+        transition: transform 0.2s;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    .color-option:hover {
+        transform: scale(1.1);
+        border-color: #333;
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+    }
+    
+    .color-option.red {
+        background-color: #e74c3c !important;
+    }
+    
+    .color-option.blue {
+        background-color: #3498db !important;
+    }
+    
+    .color-option.green {
+        background-color: #2ecc71 !important;
+    }
+    
+    .color-option.yellow {
+        background-color: #f1c40f !important;
+    }
+
+    .overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        z-index: 999;
+    }
+
+    .overlay.active {
+        display: block;
+    }
+
+    .message {
+        text-align: center;
+        color: white;
+        font-size: 1.5em;
+        margin: 20px 0;
+        min-height: 40px;
+        font-weight: bold;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    }
+
+    .controls {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        margin-top: 20px;
+        flex-wrap: wrap;
+    }
+
+    button {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 15px 30px;
+        font-size: 1.1em;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: transform 0.2s;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    button:hover {
+        transform: scale(1.05);
+    }
+
+    button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .game-over {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        padding: 40px;
+        border-radius: 20px;
+        text-align: center;
+        z-index: 1001;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        max-width: 90%;
+    }
+
+    .game-over.active {
+        display: block;
+    }
+
+    .game-over h2 {
+        font-size: 2.5em;
+        margin-bottom: 20px;
+        color: #667eea;
+    }
+
+    .computer-hand {
+        text-align: center;
+        color: white;
+        font-size: 1.3em;
+        margin-bottom: 20px;
+    }
+
+    .computer-cards {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+
+    .computer-cards .card {
+        width: 80px;
+        height: 120px;
+        margin: 0 -30px;
+    }
+
+    .uno-button {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        background: #e74c3c;
+        color: white;
+        border: none;
+        padding: 20px 40px;
+        font-size: 1.5em;
+        font-weight: bold;
+        border-radius: 50px;
+        cursor: pointer;
+        box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+        transition: all 0.3s;
+        display: none;
+        z-index: 100;
+    }
+
+    .uno-button.active {
+        display: block;
+    }
+
+    .uno-button:hover {
+        transform: scale(1.1);
+        box-shadow: 0 8px 25px rgba(231, 76, 60, 0.6);
+    }
+
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+    }
+
+    .uno-button.pulse {
+        animation: pulse 0.5s ease-in-out infinite;
+    }
+    
+    @keyframes cardPulse {
+        0%, 100% { 
+            transform: translateY(0) scale(1);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        50% { 
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 8px 16px rgba(255, 215, 0, 0.6);
+        }
+    }
+
+    .pause-menu {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        padding: 40px;
+        border-radius: 20px;
+        text-align: center;
+        z-index: 1001;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        min-width: 300px;
+    }
+
+    .pause-menu.active {
+        display: block;
+    }
+
+    .pause-menu h2 {
+        font-size: 2em;
+        color: #667eea;
+        margin-bottom: 30px;
+    }
+
+    .pause-menu button {
+        width: 100%;
+        margin-bottom: 15px;
+    }
+
+    @media (max-width: 768px) {
+        .main-menu {
+            padding: 40px 50px;
+        }
+        
+        .main-menu h1 {
+            font-size: 3em;
+        }
+        
+        .settings-menu {
+            padding: 30px 40px;
+        }
+        
+        .game-container {
+            padding: 20px;
+        }
+        
+        .uno-button {
+            bottom: 20px;
+            right: 20px;
+            padding: 15px 30px;
+            font-size: 1.2em;
+        }
+    }
+</style>
+```
+
+</head>
+<body>
+    <!-- Main Menu Screen -->
+    <div id="mainMenuScreen" class="screen active">
+        <div class="main-menu">
+            <h1>🎴 O,No 🎴</h1>
+            <p>Classic Card Game</p>
+            <button class="menu-button" onclick="startGame()">Play Game</button>
+            <button class="menu-button settings" onclick="showSettings()">Settings</button>
+            <button class="menu-button quit" onclick="quitGame()">Quit</button>
+        </div>
+    </div>
+
+```
+<!-- Settings Screen -->
+<div id="settingsScreen" class="screen">
+    <div class="settings-menu">
+        <h2>⚙️ Settings</h2>
+        
+        <div class="setting-item">
+            <label>Difficulty Level</label>
+            <select id="difficulty">
+                <option value="easy">Easy</option>
+                <option value="medium" selected>Medium</option>
+                <option value="hard">Hard</option>
+            </select>
+        </div>
+
+        <div class="setting-item">
+            <label>Starting Cards</label>
+            <select id="startingCards">
+                <option value="5">5 Cards</option>
+                <option value="7" selected>7 Cards (Classic)</option>
+                <option value="10">10 Cards</option>
+            </select>
+        </div>
+
+        <div class="setting-item">
+            <div class="toggle-container">
+                <label style="margin-bottom: 0;">Sound Effects</label>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="soundToggle" checked>
+                    <span class="slider-toggle"></span>
+                </label>
+            </div>
+        </div>
+
+        <div class="setting-item">
+            <div class="toggle-container">
+                <label style="margin-bottom: 0;">Auto O,No Call</label>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="autoUno">
+                    <span class="slider-toggle"></span>
+                </label>
+            </div>
+        </div>
+
+        <div class="setting-item">
+            <label style="margin-bottom: 20px; font-size: 1.4em; color: #667eea;">Game Rules</label>
+            
+            <div class="toggle-container" style="margin-bottom: 15px;">
+                <label style="margin-bottom: 0;">Allow +2/+4 Stacking</label>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="allowStacking">
+                    <span class="slider-toggle"></span>
+                </label>
+            </div>
+            <p style="font-size: 0.9em; color: #666; margin-bottom: 15px;">Stack +2 on +2 and +4 on +4 to pass the draw to opponent</p>
+            
+            <div class="toggle-container" style="margin-bottom: 15px;">
+                <label style="margin-bottom: 0;">Allow 0 & 7 Special Rules</label>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="allowSpecial07">
+                    <span class="slider-toggle"></span>
+                </label>
+            </div>
+            <p style="font-size: 0.9em; color: #666; margin-bottom: 15px;">Playing 0 swaps hands with opponent. Playing 7 allows you to swap hands</p>
+            
+            <div class="toggle-container" style="margin-bottom: 15px;">
+                <label style="margin-bottom: 0;">Allow Jump-In</label>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="allowJumpIn">
+                    <span class="slider-toggle"></span>
+                </label>
+            </div>
+            <p style="font-size: 0.9em; color: #666;">Play out of turn if you have an exact match (same color AND number)</p>
+        </div>
+
+        <div class="settings-buttons">
+            <button class="menu-button" onclick="saveSettings()">Save & Return</button>
+            <button class="menu-button quit" onclick="cancelSettings()">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- Game Screen -->
+<div id="gameScreen" class="screen">
+    <div class="game-container">
+        <div class="game-header">
+            <h1>🎴 O,No 🎴</h1>
+        </div>
+
+        <div class="game-info">
+            <div>Player: <span id="currentPlayer">You</span></div>
+            <div>Color: <span id="currentColor">-</span></div>
+            <div>Deck: <span id="deckCount">108</span></div>
+        </div>
+
+        <div class="computer-hand">
+            <div>Computer (<span id="computerCardCount">7</span> cards)</div>
+            <div class="computer-cards" id="computerCards"></div>
+        </div>
+
+        <div class="message" id="message">Game started! Your turn.</div>
+
+        <div class="play-area">
+            <div class="card card-back" id="drawPile" onclick="drawCard()">
+                <div style="color: white; font-size: 3em;">🎴</div>
+            </div>
+            <div id="discardPile"></div>
+        </div>
+
+        <div class="player-hand" id="playerHand"></div>
+
+        <div class="controls">
+            <button onclick="pauseGame()">Pause</button>
+            <button onclick="startNewGame()">New Game</button>
+        </div>
+    </div>
+</div>
+
+<button class="uno-button" id="unoButton" onclick="callUno()">O,NO!</button>
+
+<div class="overlay" id="overlay"></div>
+
+<div class="color-picker" id="colorPicker">
+    <h3>Choose a Color:</h3>
+    <div class="color-options">
+        <div class="color-option red" onclick="chooseColor('red')"></div>
+        <div class="color-option blue" onclick="chooseColor('blue')"></div>
+        <div class="color-option green" onclick="chooseColor('green')"></div>
+        <div class="color-option yellow" onclick="chooseColor('yellow')"></div>
+    </div>
+</div>
+
+<div class="game-over" id="gameOver">
+    <h2 id="winnerText">You Win!</h2>
+    <p id="winnerMessage"></p>
+    <button onclick="returnToMenu()" style="margin-top: 20px;">Main Menu</button>
+    <button onclick="startNewGame()" style="margin-top: 10px;">Play Again</button>
+</div>
+
+<div class="pause-menu" id="pauseMenu">
+    <h2>⏸️ Paused</h2>
+    <button onclick="resumeGame()">Resume Game</button>
+    <button onclick="returnToMenu()">Main Menu</button>
+    <button class="menu-button quit" onclick="quitGame()">Quit</button>
+</div>
+
+<script>
+    const COLORS = ['red', 'blue', 'green', 'yellow'];
+    const NUMBERS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+    const ACTIONS = ['Skip', 'Reverse', '+2'];
+    const WILDS = ['Wild', 'Wild+4'];
+
+    let deck = [];
+    let playerHand = [];
+    let computerHand = [];
+    let discardPile = [];
+    let currentColor = null;
+    let currentValue = null;
+    let currentPlayer = 'player';
+    let direction = 1;
+    let playerCalledUno = false;
+    let computerCalledUno = false;
+    let pendingWildCard = null;
+    let gameInProgress = false;
+    let stackedDrawCount = 0; // Track stacked +2/+4 cards
+    
+    // Settings
+    let settings = {
+        difficulty: 'medium',
+        startingCards: 7,
+        soundEffects: true,
+        autoUno: false,
+        allowStacking: false,
+        allowSpecial07: false,
+        allowJumpIn: false
+    };
+
+    // Screen Management
+    function showScreen(screenId) {
+        document.querySelectorAll('.screen').forEach(screen => {
+            screen.classList.remove('active');
+        });
+        document.getElementById(screenId).classList.add('active');
+    }
+
+    function showSettings() {
+        document.getElementById('difficulty').value = settings.difficulty;
+        document.getElementById('startingCards').value = settings.startingCards;
+        document.getElementById('soundToggle').checked = settings.soundEffects;
+        document.getElementById('autoUno').checked = settings.autoUno;
+        document.getElementById('allowStacking').checked = settings.allowStacking;
+        document.getElementById('allowSpecial07').checked = settings.allowSpecial07;
+        document.getElementById('allowJumpIn').checked = settings.allowJumpIn;
+        
+        showScreen('settingsScreen');
+    }
+
+    function saveSettings() {
+        settings.difficulty = document.getElementById('difficulty').value;
+        settings.startingCards = parseInt(document.getElementById('startingCards').value);
+        settings.soundEffects = document.getElementById('soundToggle').checked;
+        settings.autoUno = document.getElementById('autoUno').checked;
+        settings.allowStacking = document.getElementById('allowStacking').checked;
+        settings.allowSpecial07 = document.getElementById('allowSpecial07').checked;
+        settings.allowJumpIn = document.getElementById('allowJumpIn').checked;
+        
+        showScreen('mainMenuScreen');
+    }
+
+    function cancelSettings() {
+        showScreen('mainMenuScreen');
+    }
+
+    function startGame() {
+        showScreen('gameScreen');
+        startNewGame();
+    }
+
+    function pauseGame() {
+        if (!gameInProgress) return;
+        document.getElementById('overlay').classList.add('active');
+        document.getElementById('pauseMenu').classList.add('active');
+    }
+
+    function resumeGame() {
+        document.getElementById('overlay').classList.remove('active');
+        document.getElementById('pauseMenu').classList.remove('active');
+    }
+
+    function returnToMenu() {
+        document.getElementById('overlay').classList.remove('active');
+        document.getElementById('pauseMenu').classList.remove('active');
+        document.getElementById('gameOver').classList.remove('active');
+        document.getElementById('unoButton').classList.remove('active', 'pulse');
+        gameInProgress = false;
+        showScreen('mainMenuScreen');
+    }
+
+    function quitGame() {
+        if (confirm('Are you sure you want to quit?')) {
+            window.close();
+            setTimeout(() => {
+                alert('Please close this tab/window to quit the game.');
+            }, 100);
+        }
+    }
+
+    function createDeck() {
+        deck = [];
+        
+        COLORS.forEach(color => {
+            deck.push({ color, value: '0', type: 'number' });
+            
+            for (let i = 0; i < 2; i++) {
+                NUMBERS.slice(1).forEach(num => {
+                    deck.push({ color, value: num, type: 'number' });
+                });
+                
+                ACTIONS.forEach(action => {
+                    deck.push({ color, value: action, type: 'action' });
+                });
+            }
+        });
+        
+        for (let i = 0; i < 4; i++) {
+            deck.push({ color: 'wild', value: 'Wild', type: 'wild' });
+            deck.push({ color: 'wild', value: 'Wild+4', type: 'wild' });
+        }
+        
+        shuffleDeck();
+    }
+
+    function shuffleDeck() {
+        for (let i = deck.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [deck[i], deck[j]] = [deck[j], deck[i]];
+        }
+    }
+
+    function dealCards() {
+        playerHand = [];
+        computerHand = [];
+        discardPile = [];
+        
+        const cardsToDeal = settings.startingCards;
+        
+        for (let i = 0; i < cardsToDeal; i++) {
+            if (deck.length > 0) playerHand.push(deck.pop());
+            if (deck.length > 0) computerHand.push(deck.pop());
+        }
+        
+        let startCard;
+        do {
+            if (deck.length === 0) {
+                createDeck();
+            }
+            startCard = deck.pop();
+        } while (startCard.type !== 'number');
+        
+        discardPile.push(startCard);
+        currentColor = startCard.color;
+        currentValue = startCard.value;
+    }
+
+    function renderCard(card, clickHandler = null, isDisabled = false) {
+        const cardDiv = document.createElement('div');
+        cardDiv.className = `card ${card.color}`;
+        if (isDisabled) cardDiv.classList.add('disabled');
+        
+        const cardInner = document.createElement('div');
+        cardInner.className = 'card-inner';
+        cardInner.style.color = card.color === 'yellow' ? '#000' : card.color;
+        
+        if (card.color === 'wild') {
+            cardInner.style.color = '#333';
+        }
+        
+        cardInner.textContent = card.value;
+        cardDiv.appendChild(cardInner);
+        
+        if (clickHandler && !isDisabled) {
+            cardDiv.onclick = clickHandler;
+        }
+        
+        return cardDiv;
+    }
+
+    function renderPlayerHand() {
+        const handDiv = document.getElementById('playerHand');
+        handDiv.innerHTML = '';
+        
+        playerHand.forEach((card, index) => {
+            const isPlayable = canPlayCard(card);
+            const isJumpIn = settings.allowJumpIn && card.type === 'number' && 
+                             card.color === currentColor && card.value === currentValue;
+            
+            // Card is clickable if: (1) it's player's turn and playable, OR (2) Jump-In is enabled and it's an exact match
+            const isClickable = (currentPlayer === 'player' && isPlayable) || isJumpIn;
+            
+            const cardDiv = renderCard(card, () => playCard(index), !isClickable);
+            
+            // Add visual indicator for Jump-In cards
+            if (isJumpIn && currentPlayer !== 'player') {
+                cardDiv.style.animation = 'cardPulse 1s ease-in-out infinite';
+                cardDiv.style.border = '4px solid gold';
+            }
+            
+            handDiv.appendChild(cardDiv);
+        });
+
+        // Handle O,No button visibility
+        const unoButton = document.getElementById('unoButton');
+        if (playerHand.length === 2 && currentPlayer === 'player' && !settings.autoUno && gameInProgress) {
+            unoButton.classList.add('active', 'pulse');
+        } else if (playerHand.length === 1 && currentPlayer === 'player' && !settings.autoUno && gameInProgress) {
+            // Show button but don't pulse if already at 1 card
+            unoButton.classList.add('active');
+            unoButton.classList.remove('pulse');
+        } else {
+            unoButton.classList.remove('active', 'pulse');
+        }
+        
+        // Auto-call O,No if setting is enabled
+        if (settings.autoUno && (playerHand.length === 2 || playerHand.length === 1)) {
+            playerCalledUno = true;
+        }
+    }
+
+    function renderComputerHand() {
+        const computerCardsDiv = document.getElementById('computerCards');
+        computerCardsDiv.innerHTML = '';
+        
+        const cardsToShow = Math.min(computerHand.length, 15);
+        for (let i = 0; i < cardsToShow; i++) {
+            const cardBack = document.createElement('div');
+            cardBack.className = 'card card-back';
+            cardBack.innerHTML = '<div style="color: white; font-size: 2em;">🎴</div>';
+            computerCardsDiv.appendChild(cardBack);
+        }
+        
+        document.getElementById('computerCardCount').textContent = computerHand.length;
+    }
+
+    function renderDiscardPile() {
+        const discardDiv = document.getElementById('discardPile');
+        discardDiv.innerHTML = '';
+        
+        if (discardPile.length > 0) {
+            const topCard = discardPile[discardPile.length - 1];
+            const cardDiv = renderCard(topCard);
+            
+            // If it's a wild card and a color has been chosen, update the border and add indicator
+            if (topCard.type === 'wild' && currentColor) {
+                cardDiv.style.borderColor = getColorHex(currentColor);
+                cardDiv.style.borderWidth = '6px';
+                
+                // Add color indicator circle
+                const colorIndicator = document.createElement('div');
+                colorIndicator.className = 'wild-color-indicator';
+                colorIndicator.style.backgroundColor = getColorHex(currentColor);
+                cardDiv.appendChild(colorIndicator);
+            }
+            
+            discardDiv.appendChild(cardDiv);
+        }
+    }
+    
+    function getColorHex(color) {
+        const colorMap = {
+            'red': '#e74c3c',
+            'blue': '#3498db',
+            'green': '#2ecc71',
+            'yellow': '#f1c40f'
+        };
+        return colorMap[color] || '#ffffff';
+    }
+
+    function updateGameInfo() {
+        document.getElementById('currentPlayer').textContent = currentPlayer === 'player' ? 'You' : 'Computer';
+        document.getElementById('currentColor').textContent = currentColor || '-';
+        document.getElementById('deckCount').textContent = deck.length;
+    }
+
+    function canPlayCard(card) {
+        if (card.type === 'wild') return true;
+        
+        // Allow stacking +2 on +2 or +4 on +4 if enabled
+        if (settings.allowStacking && stackedDrawCount > 0) {
+            if (currentValue === '+2' && card.value === '+2') return true;
+            if (currentValue === 'Wild+4' && card.value === 'Wild+4') return true;
+            return false; // Can only stack or draw when there's a pending draw
+        }
+        
+        return card.color === currentColor || card.value === currentValue;
+    }
+
+    function playCard(index) {
+        if (!gameInProgress) return;
+        
+        const card = playerHand[index];
+        const isJumpIn = settings.allowJumpIn && currentPlayer !== 'player' && 
+                         card.type === 'number' && card.color === currentColor && 
+                         card.value === currentValue;
+        
+        // Check if it's a valid play
+        if (currentPlayer !== 'player' && !isJumpIn) return;
+        
+        if (currentPlayer === 'player' && !canPlayCard(card)) {
+            showMessage("Can't play that card!");
+            return;
+        }
+        
+        // Handle Jump-In
+        if (isJumpIn) {
+            showMessage('Jump-In! You interrupted the computer!');
+            currentPlayer = 'player'; // Take control of the turn
+        }
+        
+        playerHand.splice(index, 1);
+        discardPile.push(card);
+        
+        if (card.type === 'wild') {
+            pendingWildCard = card;
+            showColorPicker();
+        } else {
+            currentColor = card.color;
+            currentValue = card.value;
+            handleCardEffect(card);
+        }
+        
+        renderPlayerHand();
+        renderDiscardPile();
+        updateGameInfo();
+        
+        if (playerHand.length === 0) {
+            endGame('player');
+        }
+    }
+
+    function handleCardEffect(card) {
+        switch(card.value) {
+            case '0':
+                if (settings.allowSpecial07) {
+                    // Swap hands with computer
+                    showMessage('You played 0! Swapping hands with computer...');
+                    setTimeout(() => {
+                        const temp = playerHand;
+                        playerHand = computerHand;
+                        computerHand = temp;
+                        renderPlayerHand();
+                        renderComputerHand();
+                        showMessage('Hands swapped!');
+                        setTimeout(() => {
+                            currentPlayer = 'player';
+                            updateGameInfo();
+                            renderPlayerHand();
+                            showMessage("Your turn again!");
+                        }, 1500);
+                    }, 1000);
+                } else {
+                    // Regular number card
+                    switchTurn();
+                }
+                break;
+                
+            case '7':
+                if (settings.allowSpecial07) {
+                    // In 2-player, also just swap hands
+                    showMessage('You played 7! Swapping hands with computer...');
+                    setTimeout(() => {
+                        const temp = playerHand;
+                        playerHand = computerHand;
+                        computerHand = temp;
+                        renderPlayerHand();
+                        renderComputerHand();
+                        showMessage('Hands swapped!');
+                        setTimeout(() => {
+                            currentPlayer = 'player';
+                            updateGameInfo();
+                            renderPlayerHand();
+                            showMessage("Your turn again!");
+                        }, 1500);
+                    }, 1000);
+                } else {
+                    // Regular number card
+                    switchTurn();
+                }
+                break;
+                
+            case 'Skip':
+                showMessage('Computer skipped!');
+                setTimeout(() => {
+                    currentPlayer = 'player';
+                    updateGameInfo();
+                    renderPlayerHand();
+                    showMessage("Your turn again!");
+                }, 1000);
+                break;
+                
+            case 'Reverse':
+                direction *= -1;
+                showMessage('Direction reversed!');
+                setTimeout(() => {
+                    currentPlayer = 'player';
+                    updateGameInfo();
+                    renderPlayerHand();
+                    showMessage("Your turn again!");
+                }, 1000);
+                break;
+                
+            case '+2':
+                if (settings.allowStacking) {
+                    stackedDrawCount += 2;
+                    showMessage(`Computer must draw ${stackedDrawCount} or stack another +2!`);
+                    renderComputerHand();
+                    setTimeout(() => switchTurn(), 1500);
+                } else {
+                    drawCardsForPlayer('computer', 2);
+                    showMessage('Computer draws 2 cards and is skipped!');
+                    renderComputerHand();
+                    setTimeout(() => {
+                        currentPlayer = 'player';
+                        updateGameInfo();
+                        renderPlayerHand();
+                        showMessage("Your turn again!");
+                    }, 1500);
+                }
+                break;
+                
+            default:
+                // Regular number card or Wild cards
+                switchTurn();
+        }
+    }
+
+    function drawCardsForPlayer(player, count) {
+        for (let i = 0; i < count; i++) {
+            if (deck.length === 0) {
+                reshuffleDeck();
+            }
+            if (deck.length > 0) {
+                if (player === 'computer') {
+                    computerHand.push(deck.pop());
+                } else {
+                    playerHand.push(deck.pop());
+                }
+            }
+        }
+        updateGameInfo();
+    }
+
+    function reshuffleDeck() {
+        if (discardPile.length <= 1) return;
+        
+        const topCard = discardPile.pop();
+        deck = [...discardPile];
+        discardPile = [topCard];
+        shuffleDeck();
+    }
+
+    function checkTurnEnd() {
+        if (!gameInProgress) return;
+        
+        // Only check for O,No penalty if player has exactly 1 card after playing
+        if (playerHand.length === 1 && !playerCalledUno && currentPlayer === 'player' && !settings.autoUno) {
+            showMessage('You forgot to call O,No! Draw 2 cards!');
+            drawCardsForPlayer('player', 2);
+            renderPlayerHand();
+            playerCalledUno = false; // Reset after penalty
+            setTimeout(() => switchTurn(), 1500);
+        } else {
+            playerCalledUno = false; // Reset for next turn
+            switchTurn();
+        }
+    }
+
+    function switchTurn() {
+        if (!gameInProgress) return;
+        
+        currentPlayer = currentPlayer === 'player' ? 'computer' : 'player';
+        updateGameInfo();
+        
+        if (currentPlayer === 'computer') {
+            showMessage("Computer's turn...");
+            setTimeout(computerPlay, 1500);
+        } else {
+            showMessage("Your turn!");
+            // Re-render player hand to enable cards
+            renderPlayerHand();
+        }
+    }
+
+    function computerPlay() {
+        if (!gameInProgress) return;
+        
+        let playableCards = computerHand.filter(card => canPlayCard(card));
+        
+        if (settings.difficulty === 'easy') {
+            if (playableCards.length > 0) {
+                playableCards = [playableCards[Math.floor(Math.random() * playableCards.length)]];
+            }
+        } else if (settings.difficulty === 'hard') {
+            playableCards.sort((a, b) => {
+                const aScore = (a.type === 'wild' ? 3 : 0) + (a.value === 'Wild+4' ? 2 : 0) + (a.type === 'action' ? 1 : 0);
+                const bScore = (b.type === 'wild' ? 3 : 0) + (b.value === 'Wild+4' ? 2 : 0) + (b.type === 'action' ? 1 : 0);
+                return bScore - aScore;
+            });
+        } else {
+            playableCards.sort((a, b) => {
+                if (a.type === 'wild') return -1;
+                if (b.type === 'wild') return 1;
+                if (a.type === 'action') return -1;
+                if (b.type === 'action') return 1;
+                return 0;
+            });
+        }
+        
+        if (computerHand.length === 2) {
+            computerCalledUno = true;
+            showMessage('Computer says O,No!');
+            setTimeout(() => computerPlayContinue(playableCards), 1000);
+        } else {
+            computerCalledUno = false;
+            computerPlayContinue(playableCards);
+        }
+    }
+
+    function computerPlayContinue(playableCards) {
+        if (!gameInProgress) return;
+        
+        if (playableCards.length > 0) {
+            const cardToPlay = playableCards[0];
+            const index = computerHand.indexOf(cardToPlay);
+            computerHand.splice(index, 1);
+            discardPile.push(cardToPlay);
+            
+            if (cardToPlay.type === 'wild') {
+                const colorCounts = { red: 0, blue: 0, green: 0, yellow: 0 };
+                computerHand.forEach(c => {
+                    if (c.color !== 'wild') colorCounts[c.color]++;
+                });
+                
+                let maxColor = 'red';
+                let maxCount = 0;
+                Object.keys(colorCounts).forEach(color => {
+                    if (colorCounts[color] > maxCount) {
+                        maxCount = colorCounts[color];
+                        maxColor = color;
+                    }
+                });
+                
+                currentColor = maxColor;
+                currentValue = cardToPlay.value;
+                showMessage(`Computer played ${cardToPlay.value} and chose ${currentColor}!`);
+                
+                renderComputerHand();
+                renderDiscardPile();
+                updateGameInfo();
+                
+                if (computerHand.length === 0) {
+                    endGame('computer');
+                    return;
+                }
+                
+                // Handle Wild+4 effect
+                setTimeout(() => {
+                    if (cardToPlay.value === 'Wild+4') {
+                        if (settings.allowStacking) {
+                            stackedDrawCount += 4;
+                            showMessage(`You must draw ${stackedDrawCount} or stack another +4!`);
+                            renderPlayerHand();
+                            setTimeout(() => switchTurn(), 1500);
+                        } else {
+                            drawCardsForPlayer('player', 4);
+                            showMessage('You draw 4 cards and are skipped!');
+                            renderPlayerHand();
+                            // Player is skipped, computer goes again
+                            setTimeout(() => {
+                                currentPlayer = 'computer';
+                                updateGameInfo();
+                                setTimeout(computerPlay, 500);
+                            }, 1500);
+                        }
+                    } else {
+                        // Regular Wild - switch to player
+                        switchTurn();
+                    }
+                }, 1500);
+            } else {
+                currentColor = cardToPlay.color;
+                currentValue = cardToPlay.value;
+                showMessage(`Computer played ${cardToPlay.value} ${cardToPlay.color}!`);
+                
+                renderComputerHand();
+                renderDiscardPile();
+                updateGameInfo();
+                
+                if (computerHand.length === 0) {
+                    endGame('computer');
+                    return;
+                }
+                
+                setTimeout(() => handleComputerCardEffect(cardToPlay), 1500);
+            }
+        } else {
+            // Computer can't play - must draw
+            if (settings.allowStacking && stackedDrawCount > 0) {
+                // Computer must draw all stacked cards
+                for (let i = 0; i < stackedDrawCount; i++) {
+                    if (deck.length === 0) reshuffleDeck();
+                    if (deck.length > 0) computerHand.push(deck.pop());
+                }
+                showMessage(`Computer drew ${stackedDrawCount} cards!`);
+                stackedDrawCount = 0; // Reset stack
+                renderComputerHand();
+                updateGameInfo();
+                
+                setTimeout(() => switchTurn(), 1500);
+            } else {
+                // Regular draw
+                if (deck.length === 0) {
+                    reshuffleDeck();
+                }
+                if (deck.length > 0) {
+                    computerHand.push(deck.pop());
+                    showMessage('Computer drew a card!');
+                    renderComputerHand();
+                    updateGameInfo();
+                }
+                
+                setTimeout(() => {
+                    if (computerHand.length === 1 && !computerCalledUno) {
+                        showMessage('Computer forgot to call O,No! Draws 2 cards!');
+                        drawCardsForPlayer('computer', 2);
+                        renderComputerHand();
+                    }
+                    switchTurn();
+                }, 1500);
+            }
+        }
+    }
+
+    function handleComputerCardEffect(card) {
+        if (!gameInProgress) return;
+        
+        switch(card.value) {
+            case '0':
+                if (settings.allowSpecial07) {
+                    // Swap hands with player
+                    showMessage('Computer played 0! Swapping hands...');
+                    setTimeout(() => {
+                        const temp = playerHand;
+                        playerHand = computerHand;
+                        computerHand = temp;
+                        renderPlayerHand();
+                        renderComputerHand();
+                        showMessage('Hands swapped!');
+                        setTimeout(() => {
+                            currentPlayer = 'computer';
+                            updateGameInfo();
+                            setTimeout(computerPlay, 500);
+                        }, 1500);
+                    }, 1000);
+                } else {
+                    // Regular number card
+                    switchTurn();
+                }
+                break;
+                
+            case '7':
+                if (settings.allowSpecial07) {
+                    // Swap hands with player
+                    showMessage('Computer played 7! Swapping hands...');
+                    setTimeout(() => {
+                        const temp = playerHand;
+                        playerHand = computerHand;
+                        computerHand = temp;
+                        renderPlayerHand();
+                        renderComputerHand();
+                        showMessage('Hands swapped!');
+                        setTimeout(() => {
+                            currentPlayer = 'computer';
+                            updateGameInfo();
+                            setTimeout(computerPlay, 500);
+                        }, 1500);
+                    }, 1000);
+                } else {
+                    // Regular number card
+                    switchTurn();
+                }
+                break;
+                
+            case 'Skip':
+                showMessage('You are skipped!');
+                // Player is skipped, computer goes again
+                setTimeout(() => {
+                    currentPlayer = 'computer';
+                    updateGameInfo();
+                    setTimeout(computerPlay, 500);
+                }, 1000);
+                break;
+                
+            case 'Reverse':
+                direction *= -1;
+                showMessage('Direction reversed!');
+                // In 2-player game, reverse acts like skip - computer goes again
+                setTimeout(() => {
+                    currentPlayer = 'computer';
+                    updateGameInfo();
+                    setTimeout(computerPlay, 500);
+                }, 1000);
+                break;
+                
+            case '+2':
+                if (settings.allowStacking) {
+                    stackedDrawCount += 2;
+                    showMessage(`You must draw ${stackedDrawCount} or stack another +2!`);
+                    renderPlayerHand();
+                    setTimeout(() => switchTurn(), 1500);
+                } else {
+                    drawCardsForPlayer('player', 2);
+                    showMessage('You draw 2 cards and are skipped!');
+                    renderPlayerHand();
+                    // Player draws and is skipped, computer goes again
+                    setTimeout(() => {
+                        currentPlayer = 'computer';
+                        updateGameInfo();
+                        setTimeout(computerPlay, 500);
+                    }, 1500);
+                }
+                break;
+                
+            default:
+                // Regular number card or Wild cards - switch to player's turn
+                switchTurn();
+        }
+    }
+
+    function drawCard() {
+        if (currentPlayer !== 'player' || !gameInProgress) return;
+        
+        // If there's a stacked draw count, player must draw all cards
+        if (settings.allowStacking && stackedDrawCount > 0) {
+            for (let i = 0; i < stackedDrawCount; i++) {
+                if (deck.length === 0) reshuffleDeck();
+                if (deck.length > 0) playerHand.push(deck.pop());
+            }
+            showMessage(`You drew ${stackedDrawCount} cards!`);
+            stackedDrawCount = 0; // Reset stack
+            renderPlayerHand();
+            updateGameInfo();
+            
+            // Player is skipped after drawing stacked cards
+            setTimeout(() => {
+                currentPlayer = 'computer';
+                updateGameInfo();
+                setTimeout(computerPlay, 1000);
+            }, 1500);
+            return;
+        }
+        
+        if (deck.length === 0) {
+            reshuffleDeck();
+        }
+        
+        if (deck.length > 0) {
+            const drawnCard = deck.pop();
+            playerHand.push(drawnCard);
+            showMessage('You drew a card!');
+            renderPlayerHand();
+            updateGameInfo();
+            
+            setTimeout(() => switchTurn(), 1000);
+        } else {
+            showMessage('No cards available!');
+        }
+    }
+
+    function showColorPicker() {
+        document.getElementById('overlay').classList.add('active');
+        document.getElementById('colorPicker').classList.add('active');
+    }
+
+    function chooseColor(color) {
+        currentColor = color;
+        currentValue = pendingWildCard.value;
+        
+        document.getElementById('overlay').classList.remove('active');
+        document.getElementById('colorPicker').classList.remove('active');
+        
+        showMessage(`You chose ${color}!`);
+        updateGameInfo();
+        renderDiscardPile(); // Re-render to show color change on wild card
+        
+        const wildCard = pendingWildCard;
+        pendingWildCard = null;
+        
+        // Handle the wild card effect after color is chosen
+        setTimeout(() => {
+            if (wildCard.value === 'Wild+4') {
+                if (settings.allowStacking) {
+                    stackedDrawCount += 4;
+                    showMessage(`Computer must draw ${stackedDrawCount} or stack another +4!`);
+                    renderComputerHand();
+                    setTimeout(() => switchTurn(), 1500);
+                } else {
+                    // Draw 4 for opponent and skip their turn
+                    drawCardsForPlayer('computer', 4);
+                    showMessage('Computer draws 4 cards and is skipped!');
+                    renderComputerHand();
+                    setTimeout(() => {
+                        currentPlayer = 'player';
+                        updateGameInfo();
+                        renderPlayerHand();
+                        showMessage("Your turn again!");
+                    }, 1500);
+                }
+            } else {
+                // Regular Wild - just switch turns normally
+                switchTurn();
+            }
+        }, 1000);
+    }
+
+    function callUno() {
+        if ((playerHand.length === 2 || playerHand.length === 1) && gameInProgress) {
+            playerCalledUno = true;
+            showMessage('O,No!');
+            document.getElementById('unoButton').classList.remove('pulse');
+        }
+    }
+
+    function showMessage(msg) {
+        document.getElementById('message').textContent = msg;
+    }
+
+    function endGame(winner) {
+        gameInProgress = false;
+        const gameOverDiv = document.getElementById('gameOver');
+        const overlay = document.getElementById('overlay');
+        
+        document.getElementById('unoButton').classList.remove('active', 'pulse');
+        
+        if (winner === 'player') {
+            document.getElementById('winnerText').textContent = '🎉 You Win! 🎉';
+            document.getElementById('winnerMessage').textContent = 'Congratulations! You beat the computer!';
+        } else {
+            document.getElementById('winnerText').textContent = '💻 Computer Wins! 💻';
+            document.getElementById('winnerMessage').textContent = 'Better luck next time!';
+        }
+        
+        overlay.classList.add('active');
+        gameOverDiv.classList.add('active');
+    }
+
+    function startNewGame() {
+        // Close all overlays and menus
+        document.getElementById('gameOver').classList.remove('active');
+        document.getElementById('overlay').classList.remove('active');
+        document.getElementById('pauseMenu').classList.remove('active');
+        document.getElementById('colorPicker').classList.remove('active');
+        document.getElementById('unoButton').classList.remove('active', 'pulse');
+        
+        // Reset ALL game state variables
+        currentPlayer = 'player';
+        direction = 1;
+        playerCalledUno = false;
+        computerCalledUno = false;
+        pendingWildCard = null;
+        gameInProgress = true;
+        currentColor = null;
+        currentValue = null;
+        stackedDrawCount = 0;
+        
+        // Create fresh deck and deal
+        createDeck();
+        dealCards();
+        
+        // Render everything
+        renderPlayerHand();
+        renderComputerHand();
+        renderDiscardPile();
+        updateGameInfo();
+        showMessage('New game started! Your turn.');
+    }
+</script>
+```
+
+</body>
+</html>
