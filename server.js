@@ -63,6 +63,7 @@ this.settings = settings || {
 startingCards: 7,
 allowStacking: false,
 allowSpecial07: false,
+allowSpecial48: false,
 allowJumpIn: false
 };
 this.gameStarted = false;
@@ -398,6 +399,16 @@ switch(card.value) {
             const temp = room.players[playerIndex].hand;
             room.players[playerIndex].hand = room.players[opponentIndex].hand;
             room.players[opponentIndex].hand = temp;
+            // Player who played 0 goes again after swap
+        } else {
+            room.currentPlayer = opponentIndex;
+        }
+        break;
+
+    case '4':
+        if (room.settings.allowSpecial48) {
+            // Skip opponent's next turn
+            // In 2-player, this means current player goes again
         } else {
             room.currentPlayer = opponentIndex;
         }
@@ -408,16 +419,28 @@ switch(card.value) {
             const temp = room.players[playerIndex].hand;
             room.players[playerIndex].hand = room.players[opponentIndex].hand;
             room.players[opponentIndex].hand = temp;
+            // Player who played 7 goes again after swap
+        } else {
+            room.currentPlayer = opponentIndex;
+        }
+        break;
+
+    case '8':
+        if (room.settings.allowSpecial48) {
+            // Reverse turn order
+            // In 2-player, same effect as skip - current player goes again
         } else {
             room.currentPlayer = opponentIndex;
         }
         break;
 
     case 'Skip':
-        // Current player goes again
+        // In 2-player, Skip means current player goes again (opponent is skipped)
+        // Current player keeps the turn
         break;
 
     case 'Reverse':
+        // In 2-player, Reverse acts like Skip - current player goes again
         room.direction *= -1;
         break;
 
@@ -432,6 +455,8 @@ switch(card.value) {
                     room.players[opponentIndex].hand.push(room.deck.pop());
                 }
             }
+            // After drawing, it's still the opponent's turn but they can't play
+            // So switch back to current player
         }
         break;
 
@@ -446,10 +471,12 @@ switch(card.value) {
                     room.players[opponentIndex].hand.push(room.deck.pop());
                 }
             }
+            // After drawing, current player goes again
         }
         break;
 
     default:
+        // Regular number cards - switch to opponent
         room.currentPlayer = opponentIndex;
 }
 ```
