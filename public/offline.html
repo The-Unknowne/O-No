@@ -863,9 +863,14 @@
 
     // Apply background animation based on current setting
     function applyBackgroundAnimation() {
+        const validAnimations = ['static', 'color-cycle', 'pulsing'];
+        const animation = validAnimations.includes(settings.backgroundAnimation) 
+            ? settings.backgroundAnimation 
+            : 'static';
+        
         const body = document.body;
         body.classList.remove('bg-static', 'bg-color-cycle', 'bg-pulsing');
-        body.classList.add('bg-' + settings.backgroundAnimation);
+        body.classList.add('bg-' + animation);
     }
 
     // Screen Management

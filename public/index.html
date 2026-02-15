@@ -858,15 +858,20 @@
     // Background animation settings
     function loadBackgroundAnimation() {
         const savedAnimation = localStorage.getItem('onoBackgroundAnimation');
-        const animation = savedAnimation || 'static';
+        const validAnimations = ['static', 'color-cycle', 'pulsing'];
+        const animation = validAnimations.includes(savedAnimation) ? savedAnimation : 'static';
         applyBackgroundAnimation(animation);
     }
 
     function applyBackgroundAnimation(animation) {
+        const validAnimations = ['static', 'color-cycle', 'pulsing'];
+        if (!validAnimations.includes(animation)) {
+            animation = 'static';
+        }
+        
         const body = document.body;
         body.classList.remove('bg-static', 'bg-color-cycle', 'bg-pulsing');
         body.classList.add('bg-' + animation);
-        localStorage.setItem('onoBackgroundAnimation', animation);
     }
 
     // Initialize socket connection with error handling
