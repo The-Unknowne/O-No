@@ -543,23 +543,35 @@
         <div class="menu-container">
             <h1>🎴 O,No 🎴</h1>
             <p style="margin-bottom: 30px; color: #666;">Choose Game Mode</p>
-            <button class="menu-button online" onclick="showLobbyList()">🌐 Play Online</button>
+            <button class="menu-button online" onclick="showOnlineMenu()">🌐 Play Online</button>
             <button class="menu-button offline" onclick="playOffline()">🤖 Play vs Computer</button>
         </div>
     </div>
 
 ```
+<!-- Online Menu -->
+<div id="onlineMenu" class="screen">
+    <div class="menu-container">
+        <h2>🌐 Online Multiplayer</h2>
+        <p style="margin-bottom: 30px; color: #666;">Choose an option</p>
+        <button class="menu-button create" onclick="showCreateLobby()">➕ Create Lobby</button>
+        <button class="menu-button online" onclick="showLobbyList()">🎮 Join Lobby</button>
+        <button class="menu-button offline" onclick="showMainMenu()">Back to Menu</button>
+    </div>
+</div>
+
 <!-- Lobby List -->
 <div id="lobbyList" class="screen">
     <div class="menu-container">
-        <h2>🎮 Game Lobbies</h2>
-        <button class="menu-button create" onclick="showCreateLobby()">➕ Create New Lobby</button>
+        <h2>🎮 Available Lobbies</h2>
+        <p style="margin-bottom: 20px; color: #666;">Select a lobby to join</p>
         
         <div class="lobby-list" id="lobbyListContainer">
             <!-- Lobbies will be dynamically added here -->
         </div>
 
-        <button class="menu-button offline" onclick="showMainMenu()">Back</button>
+        <button class="menu-button" onclick="refreshLobbies()" style="background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);">🔄 Refresh</button>
+        <button class="menu-button offline" onclick="showOnlineMenu()">Back</button>
     </div>
 </div>
 
@@ -619,7 +631,7 @@
         </div>
 
         <button class="menu-button online" onclick="createLobby()">Create Lobby</button>
-        <button class="menu-button offline" onclick="showLobbyList()">Cancel</button>
+        <button class="menu-button offline" onclick="showOnlineMenu()">Back</button>
     </div>
 </div>
 
@@ -794,8 +806,18 @@
         showScreen('mainMenu');
     }
 
+    function showOnlineMenu() {
+        showScreen('onlineMenu');
+    }
+
     function showLobbyList() {
         showScreen('lobbyList');
+        if (socket && socket.connected) {
+            socket.emit('requestLobbies');
+        }
+    }
+
+    function refreshLobbies() {
         if (socket && socket.connected) {
             socket.emit('requestLobbies');
         }
@@ -817,8 +839,9 @@
             container.innerHTML = `
                 <div class="empty-state">
                     <div class="empty-state-icon">🎮</div>
-                    <p>No active lobbies</p>
-                    <p style="font-size: 0.9em; margin-top: 10px;">Create one to start playing!</p>
+                    <p style="font-size: 1.2em; margin-bottom: 10px;">No lobbies available</p>
+                    <p style="font-size: 0.9em; color: #95a5a6;">No one is hosting a game right now</p>
+                    <p style="font-size: 0.9em; color: #95a5a6; margin-top: 5px;">Go back and create a lobby to get started!</p>
                 </div>
             `;
             return;
@@ -897,7 +920,7 @@
         if (socket && socket.connected) {
             socket.emit('leaveLobby', { roomId: roomId });
         }
-        showMainMenu();
+        showOnlineMenu();
     }
 
     function showWaitingLobby(lobbyName, settings) {
