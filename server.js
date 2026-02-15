@@ -38,20 +38,23 @@ const rooms = new Map();
 const lobbies = {}; // { lobbyId: { name, host, settings, players: [] } }
 // Game state management
 class GameRoom {
-constructor(roomId, player1, player2, settings) {
+constructor(roomId, players, settings) {
 this.roomId = roomId;
-this.players = [
-{ id: player1.id, name: player1.name, hand: [], calledUno: false },
-{ id: player2.id, name: player2.name, hand: [], calledUno: false }
-];
+this.players = players.map(p => ({
+id: p.id,
+name: p.name,
+hand: [],
+calledUno: false
+}));
 this.deck = [];
 this.discardPile = [];
 this.currentPlayer = 0;
 this.currentColor = null;
 this.currentValue = null;
-this.direction = 1;
+this.direction = 1; // 1 = clockwise, -1 = counter-clockwise
 this.stackedDrawCount = 0;
 this.settings = settings || {
+maxPlayers: 2,
 startingCards: 7,
 allowStacking: false,
 allowSpecial07: false,
@@ -110,13 +113,21 @@ this.currentValue = startCard.value;
 }
 getGameState(playerId) {
 const playerIndex = this.players.findIndex(p => p.id === playerId);
-const opponentIndex = playerIndex === 0 ? 1 : 0;
+// Get opponents info (all other players)
+const opponents = this.players
+.filter((p, idx) => idx !== playerIndex)
+.map(p => ({
+name: p.name,
+cardCount: p.hand.length,
+id: p.id
+}));
 return {
 roomId: this.roomId,
 yourHand: this.players[playerIndex].hand,
 yourName: this.players[playerIndex].name,
-opponentName: this.players[opponentIndex].name,
-opponentCardCount: this.players[opponentIndex].hand.length,
+opponents: opponents,
+totalPlayers: this.players.length,
+currentPlayerName: this.players[this.currentPlayer].name,
 discardPile: this.discardPile[this.discardPile.length - 1],
 currentColor: this.currentColor,
 currentValue: this.currentValue,
@@ -164,19 +175,20 @@ if (!lobby) {
 socket.emit('error', 'Lobby not found');
 return;
 }
-if (lobby.players.length >= 2) {
+const maxPlayers = lobby.settings.maxPlayers || 2;
+if (lobby.players.length >= maxPlayers) {
 socket.emit('error', 'Lobby is full');
 return;
 }
 lobby.players.push({ id: socket.id, name: playerName, ready: false });
 socket.join(lobbyId);
-// Notify both players about the update
+// Notify all players about the update
 io.to(lobbyId).emit('lobbyUpdate', {
 roomId: lobbyId,
 players: lobby.players
 });
 broadcastLobbyList();
-console.log(`Player ${playerName} joined lobby ${lobbyId}`);
+console.log(`Player ${playerName} joined lobby ${lobbyId} (${lobby.players.length}/${
 });
 socket.on('playerReady', ({ roomId, ready }) => {
 const lobby = lobbies[roomId];
@@ -191,13 +203,17 @@ io.to(roomId).emit('lobbyUpdate', {
 roomId: roomId,
 players: lobby.players
 });
-// Check if both players are ready
-if (lobby.players.length === 2 && lobby.players.every(p => p.ready)) {
+const maxPlayers = lobby.settings.maxPlayers || 2;
+const minPlayers = 2; // Minimum 2 players to start
+// Check if we have minimum players, all are ready, OR lobby is full and all ready
+const hasMinimum = lobby.players.length >= minPlayers;
+const allReady = lobby.players.every(p => p.ready);
+const canStart = hasMinimum && allReady;
+if (canStart) {
 // Start game
 const room = new GameRoom(
 roomId,
-lobby.players[0],
-lobby.players[1],
+lobby.players,
 lobby.settings
 );
 rooms.set(roomId, room);
@@ -212,7 +228,7 @@ playerSocket.emit('gameStarted', room.getGameState(player.id));
 });
 delete lobbies[roomId];
 broadcastLobbyList();
-console.log(`Game started in lobby ${roomId} (both players ready)`);
+console.log(`Game started in lobby ${roomId} with ${room.players.length} players
 }
 });
 socket.on('leaveLobby', ({ roomId }) => {
@@ -316,84 +332,109 @@ console.log(`Room ${roomId} deleted due to disconnect`);
 });
 });
 function handleCardEffect(room, card, playerIndex) {
-const opponentIndex = playerIndex === 0 ? 1 : 0;
+const playerCount = room.players.length;
+// Calculate next player based on direction
+const getNextPlayer = () => {
+let next = playerIndex + room.direction;
+if (next >= playerCount) next = 0;
+if (next < 0) next = playerCount - 1;
+return next;
+};
 switch(card.value) {
 case '0':
 if (room.settings.allowSpecial07) {
+// Swap hands with next player
+const nextPlayer = getNextPlayer();
 const temp = room.players[playerIndex].hand;
-room.players[playerIndex].hand = room.players[opponentIndex].hand;
-room.players[opponentIndex].hand = temp;
+room.players[playerIndex].hand = room.players[nextPlayer].hand;
+room.players[nextPlayer].hand = temp;
 // Player who played 0 goes again after swap
 } else {
-room.currentPlayer = opponentIndex;
+room.currentPlayer = getNextPlayer();
 }
 break;
 case '4':
-if (room.settings.allowSpecial48) {
-// Skip opponent's next turn
-// In 2-player, this means current player goes again
 } else {
-room.currentPlayer = opponentIndex;
+if (room.settings.allowSpecial48) {
+// Skip next player (current player goes again)
+room.currentPlayer = getNextPlayer();
 }
 break;
 case '7':
 if (room.settings.allowSpecial07) {
+// Swap hands with next player
+const nextPlayer = getNextPlayer();
 const temp = room.players[playerIndex].hand;
-room.players[playerIndex].hand = room.players[opponentIndex].hand;
-room.players[opponentIndex].hand = temp;
+room.players[playerIndex].hand = room.players[nextPlayer].hand;
+room.players[nextPlayer].hand = temp;
 // Player who played 7 goes again after swap
 } else {
-room.currentPlayer = opponentIndex;
+room.currentPlayer = getNextPlayer();
 }
 break;
 case '8':
 if (room.settings.allowSpecial48) {
-// Reverse turn order
-// In 2-player, same effect as skip - current player goes again
+// Reverse direction (current player goes again in same direction)
+room.direction *= -1;
 } else {
-room.currentPlayer = opponentIndex;
+room.currentPlayer = getNextPlayer();
 }
 break;
 case 'Skip':
-// In 2-player, Skip means current player goes again (opponent is skipped)
-// Current player keeps the turn
+// Skip next player - move to player after next
+const skipped = getNextPlayer();
+room.currentPlayer = playerIndex + (room.direction * 2);
+if (room.currentPlayer >= playerCount) room.currentPlayer -= playerCount;
+if (room.currentPlayer < 0) room.currentPlayer += playerCount;
 break;
 case 'Reverse':
-// In 2-player, Reverse acts like Skip - current player goes again
+// Reverse direction
 room.direction *= -1;
+// In 2-player, acts like skip (stays with current player)
+// In 3+ player, moves to next player in new direction
+if (playerCount > 2) {
+room.currentPlayer = getNextPlayer();
+}
 break;
 case '+2':
+const next2 = getNextPlayer();
 if (room.settings.allowStacking) {
 room.stackedDrawCount += 2;
-room.currentPlayer = opponentIndex;
+room.currentPlayer = next2;
 } else {
 for (let i = 0; i < 2; i++) {
 if (room.deck.length === 0) reshuffleDeck(room);
 if (room.deck.length > 0) {
-room.players[opponentIndex].hand.push(room.deck.pop());
+room.players[next2].hand.push(room.deck.pop());
 }
 }
-// After drawing, it's still the opponent's turn but they can't play
-// So switch back to current player
+// Next player drew cards and is skipped
+room.currentPlayer = next2 + room.direction;
+if (room.currentPlayer >= playerCount) room.currentPlayer = 0;
+if (room.currentPlayer < 0) room.currentPlayer = playerCount - 1;
 }
 break;
 case 'Wild+4':
+const next4 = getNextPlayer();
 if (room.settings.allowStacking) {
 room.stackedDrawCount += 4;
-room.currentPlayer = opponentIndex;
+room.currentPlayer = next4;
 } else {
 for (let i = 0; i < 4; i++) {
 if (room.deck.length === 0) reshuffleDeck(room);
 if (room.deck.length > 0) {
-room.players[opponentIndex].hand.push(room.deck.pop());
+room.players[next4].hand.push(room.deck.pop());
 }
 }
-// After drawing, current player goes again
+// Next player drew cards and is skipped
+room.currentPlayer = next4 + room.direction;
+if (room.currentPlayer >= playerCount) room.currentPlayer = 0;
+if (room.currentPlayer < 0) room.currentPlayer = playerCount - 1;
 }
 break;
 default:
-// Regular number cards - switch to opponent
-room.currentPlayer = opponentIndex;
+// Regular number cards - move to next player
+room.currentPlayer = getNextPlayer();
 }
 }
 function reshuffleDeck(room) {
